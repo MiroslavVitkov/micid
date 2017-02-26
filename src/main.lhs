@@ -1,4 +1,9 @@
+\begin{code}
 module Main where
 
 main :: IO ()
-main = putStrLn "Hello, Haskell!"
+
+fac 0 = 1
+fac n = n * fac( n - 1 )
+main = print( fac( 42 ) )
+\end{code}
