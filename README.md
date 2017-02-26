@@ -1,2 +1,2 @@
-# micid
-Identify diferent persons via microphone input
+# voiceid
+Identify diferent persons via microphone input.
