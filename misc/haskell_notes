@@ -1,0 +1,24 @@
+hc, ghci, runghc
+in ghci: ':module + Data.Ratio'
+          ':?'
+           rising to power ^ or **
+           :set +t 
+           it - like MatLab ans
+
+map f l
+filter p l
+fold (listElem accumulator -> accumulator) initAcc list
+
+Data.List -> Safe
+Data.Maybe
+
+partial polymorphic functions - crash for some inputs
+
+<$> - function application, lifted over a functor; fmap
+$ - function application with low precedence, right associativity,  f $ g $ h x  =  f (g (h x))
+<*> - sequence functor computations
+>>= - sequence two monad actions, providing first actions output to the second
+>> - sequence two actions, discarding first action's output
+. - function composition, high precedence
+
+hlint
