@@ -1,0 +1,3 @@
+Aparently, we need:
+apt-get install libsdl2-dev 
+pip install PySDL2
