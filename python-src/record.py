@@ -1,5 +1,8 @@
 #!/usr/bin/python
 
+# Using SDL2. Alternative technologies would have been:
+# PortAudio, SFML2, OpenAL.
+
 from sdl2 import *
 from ctypes import c_char, cast
 import wave
