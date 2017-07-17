@@ -1,17 +1,14 @@
 {-# OPTIONS_GHC -Wall #-}
 
 
--- This module uses cabal package 'sdl2',
--- instead of the legacy sdl1(Graphics.UI.SDL) bindings.
---
--- Further dependant package is 'wave'.
+-- Dependant on cabal packages: sdl2, wave.
 
 
 module Main where
 
 
 import qualified Control.Concurrent as C
-import qualified Control.Monad as M
+--import qualified Control.Monad as M
 import qualified Data.Vector.Storable.Mutable as V
 import qualified Data.Set as S
 import Foreign.ForeignPtr as P
@@ -24,23 +21,14 @@ import qualified Codec.Audio.Wave as W
 import qualified System.IO as IO
 
 
-type MicCb f = A.AudioFormat f -> V.IOVector f -> IO ()
-
-
---micCb :: IO.Handle -> MicCb f
---micCb _ _ (V.MVector size ptr) = print "kur"  --IO.hPutBuf h (p ptr size) size
---  where p ptr size = V.unsafeFromForeignPtr0 ptr size
-
-
---micSpec :: OpenDeviceCallback st -> A.OpenDeviceSpec
---micSpec :: MicCb f -> A.OpenDeviceSpec
---micSpec c = A.OpenDeviceSpec {A.openDeviceFreq = A.Mandate 48000
---                             ,A.openDeviceFormat = A.Mandate A.Unsigned16BitNativeAudio
---                             ,A.openDeviceChannels = A.Mandate A.Mono
---                             ,A.openDeviceSamples = 4096
---                             ,A.openDeviceCallback = c
---                             ,A.openDeviceUsage = A.ForCapture
---                             ,A.openDeviceName = Nothing}
+micSpec :: IO.Handle -> A.OpenDeviceSpec
+micSpec h = A.OpenDeviceSpec {A.openDeviceFreq = A.Mandate 48000
+                             ,A.openDeviceFormat = A.Mandate A.Signed16BitNativeAudio
+                             ,A.openDeviceChannels = A.Mandate A.Mono
+                             ,A.openDeviceSamples = 4096
+                             ,A.openDeviceCallback = \_ (V.MVector size ptr) -> P.withForeignPtr ptr (\p -> IO.hPutBuf h p size)
+                             ,A.openDeviceUsage = A.ForCapture
+                             ,A.openDeviceName = Nothing}
 
 
 waveSpec :: W.Wave
@@ -57,18 +45,10 @@ waveSpec = W.Wave {W.waveFileFormat = W.WaveVanilla
 record :: IO.Handle -> IO ()
 record h = do
   SDL.initialize [SDL.InitAudio]
---  let mic = micSpec (micCb h)
-  let mic = A.OpenDeviceSpec {A.openDeviceFreq = A.Mandate 48000
-                             ,A.openDeviceFormat = A.Mandate A.Unsigned16BitNativeAudio
-                             ,A.openDeviceChannels = A.Mandate A.Mono
-                             ,A.openDeviceSamples = 4096
-                             ,A.openDeviceCallback = \_ (V.MVector size ptr) -> P.withForeignPtr ptr (\p -> IO.hPutBuf h p size)
-                             ,A.openDeviceUsage = A.ForCapture
-                             ,A.openDeviceName = Nothing}
-  (dev, _) <- A.openAudioDevice mic
+  (dev, _) <- A.openAudioDevice $ micSpec h
   A.setAudioDevicePlaybackState dev A.Play
 --  _ <- M.forever (C.threadDelay maxBound)
-  _ <- C.threadDelay 1000000
+  _ <- C.threadDelay 10000000
   return ()
 
 
