@@ -1,17 +1,17 @@
 {-# OPTIONS_GHC -Wall #-}
 
 
--- Dependant on cabal packages: sdl2, wave.
+-- This module uses cabal package 'sdl2',
+-- instead of the legacy sdl1(Graphics.UI.SDL) bindings.
 
 
 module Main where
 
 
 import qualified Control.Concurrent as C
---import qualified Control.Monad as M
+import qualified Control.Monad as M
 import qualified Data.Vector.Storable.Mutable as V
 import qualified Data.Set as S
-import Foreign.ForeignPtr as P
 
 import qualified SDL
 import qualified SDL.Audio as A
@@ -20,18 +20,20 @@ import qualified Codec.Audio.Wave as W
 
 import qualified System.IO as IO
 
-import qualified Statistics.Sample as St
 
+audioCb :: A.AudioFormat f -> V.IOVector f -> IO ()
+audioCb _ _ = print "foo"
 
-micSpec :: IO.Handle -> A.OpenDeviceSpec
-micSpec h = A.OpenDeviceSpec {A.openDeviceFreq = A.Mandate 48000
-                             ,A.openDeviceFormat = A.Mandate A.Signed16BitNativeAudio
-                             ,A.openDeviceChannels = A.Mandate A.Mono
-                             ,A.openDeviceSamples = 4096
-                             ,A.openDeviceCallback = \_ (V.MVector size ptr) -> P.withForeignPtr ptr (\p -> IO.hPutBuf h p size)
-                             ,A.openDeviceUsage = A.ForCapture
-                             ,A.openDeviceName = Nothing}
+micSpec :: A.OpenDeviceSpec
+micSpec = A.OpenDeviceSpec {A.openDeviceFreq = A.Mandate 48000
+                           ,A.openDeviceFormat = A.Mandate A.Unsigned16BitNativeAudio
+                           ,A.openDeviceChannels = A.Mandate A.Mono
+                           ,A.openDeviceSamples = 4096
+                           ,A.openDeviceCallback = audioCb
+                           ,A.openDeviceUsage = A.ForCapture
+                           ,A.openDeviceName = Nothing}
 
+type SS = S.Set W.SpeakerPosition
 
 waveSpec :: W.Wave
 waveSpec = W.Wave {W.waveFileFormat = W.WaveVanilla
@@ -47,12 +49,10 @@ waveSpec = W.Wave {W.waveFileFormat = W.WaveVanilla
 record :: IO.Handle -> IO ()
 record h = do
   SDL.initialize [SDL.InitAudio]
-  (dev, _) <- A.openAudioDevice $ micSpec h
+  (dev, _) <- A.openAudioDevice micSpec
   A.setAudioDevicePlaybackState dev A.Play
---  _ <- M.forever (C.threadDelay maxBound)
-  _ <- C.threadDelay 10000000
+  _ <- M.forever (C.threadDelay maxBound)
   return ()
-
 
 main :: IO ()
 main =  W.writeWaveFile "mic.rec" waveSpec record
